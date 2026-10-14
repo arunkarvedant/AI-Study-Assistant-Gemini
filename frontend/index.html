@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>StudyDesk — AI Study Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.2/math.min.js"></script>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="toast-wrap"></div>
+
+<div class="shell">
+
+  <!-- ============================= SIDEBAR ============================= -->
+  <aside class="side">
+    <div class="brand">
+      <span class="brand-mark">&#9998;</span>
+      <span class="brand-text">StudyDesk</span>
+      <span class="brand-badge">Gemini</span>
+    </div>
+
+    <nav class="nav" id="nav"></nav>
+
+    <div class="side-foot">
+      <div class="streak-chip" id="streak-chip">
+        🔥 <span>Study streak: <b id="streak-num">0</b> days</span>
+      </div>
+      <button class="theme-toggle" id="theme-toggle">
+        <span id="theme-icon">🌙</span> <span id="theme-label">Dark mode</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ============================== PAGE ================================ -->
+  <main class="page" id="page"></main>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
