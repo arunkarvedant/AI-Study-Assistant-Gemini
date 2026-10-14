@@ -18,12 +18,12 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 const MODEL_CANDIDATES = [
   process.env.GEMINI_MODEL,
+  'gemini-3.5-flash-lite',
+  'gemini-3.5-flash',
   'gemini-2.5-flash',
   'gemini-2.5-flash-lite',
   'gemini-2.0-flash',
   'gemini-1.5-flash',
-  'gemini-3.5-flash',
-  'gemini-3.5-flash-lite',
 ].filter(Boolean);
 
 let workingModel = null; // cached once we find a model ID that responds successfully
@@ -52,7 +52,7 @@ async function callGemini(systemPrompt, userContent) {
     throw err;
   }
 
-  const modelsToTry = workingModel ? [workingModel] : MODEL_CANDIDATES;
+  const modelsToTry = workingModel ? [workingModel, ...MODEL_CANDIDATES.filter((m) => m !== workingModel)] : MODEL_CANDIDATES;
   let lastError = null;
 
   for (const model of modelsToTry) {
@@ -72,11 +72,9 @@ async function callGemini(systemPrompt, userContent) {
 
       if (!response.ok) {
         const errText = await response.text();
-        if (response.status === 404 && modelsToTry.length > 1) {
-          lastError = new Error(`Gemini API error (${response.status}) for model "${model}": ${errText}`);
-          continue;
-        }
-        throw new Error(`Gemini API error (${response.status}) for model "${model}": ${errText}`);
+        lastError = new Error(`Gemini API error (${response.status}) for model "${model}": ${errText}`);
+        if (workingModel === model) workingModel = null;
+        continue;
       }
 
       const data = await response.json();
@@ -88,7 +86,7 @@ async function callGemini(systemPrompt, userContent) {
       return text;
     } catch (err) {
       lastError = err;
-      if (!/Gemini API error \(404\)/.test(err.message)) throw err;
+      if (workingModel === model) workingModel = null;
     }
   }
 
