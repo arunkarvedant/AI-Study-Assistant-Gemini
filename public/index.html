@@ -1,45 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>StudyDesk — AI Study Assistant</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.2/math.min.js"></script>
-<link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyDesk — AI Study Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.2/math.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<div id="toast-wrap"></div>
+  <!-- Floating Toast Notifications (Cubby UI Toast) -->
+  <div id="toast-wrap" role="region" aria-label="Notifications" aria-live="polite"></div>
 
-<div class="shell">
-
-  <!-- ============================= SIDEBAR ============================= -->
-  <aside class="side">
-    <div class="brand">
-      <span class="brand-mark">&#9998;</span>
-      <span class="brand-text">StudyDesk</span>
-      <span class="brand-badge">Gemini</span>
-    </div>
-
-    <nav class="nav" id="nav"></nav>
-
-    <div class="side-foot">
-      <div class="streak-chip" id="streak-chip">
-        🔥 <span>Study streak: <b id="streak-num">0</b> days</span>
+  <!-- Command Palette Modal (Cubby UI Command Dialog) -->
+  <div id="command-dialog-backdrop" class="command-backdrop hidden">
+    <div class="command-dialog" role="dialog" aria-modal="true" aria-label="Command Menu">
+      <div class="command-search-bar">
+        <svg class="command-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.3-4.3"></path>
+        </svg>
+        <input type="text" id="command-input" placeholder="Type a command or search tools..." autocomplete="off" />
+        <span class="kbd-badge"><kbd>ESC</kbd></span>
       </div>
-      <button class="theme-toggle" id="theme-toggle">
-        <span id="theme-icon">🌙</span> <span id="theme-label">Dark mode</span>
-      </button>
+      <div class="command-results" id="command-results"></div>
+      <div class="command-footer">
+        <span>Use <kbd>↑</kbd> <kbd>↓</kbd> to navigate</span>
+        <span><kbd>↵</kbd> to select</span>
+        <span><kbd>ESC</kbd> to close</span>
+      </div>
     </div>
-  </aside>
+  </div>
 
-  <!-- ============================== PAGE ================================ -->
-  <main class="page" id="page"></main>
+  <div class="app-layout">
+    <!-- ============================= SIDEBAR ============================= -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"></path>
+            </svg>
+          </div>
+          <div class="brand-info">
+            <span class="brand-name">StudyDesk</span>
+            <span class="brand-badge-pill">Gemini AI</span>
+          </div>
+        </div>
+      </div>
 
-</div>
+      <!-- Quick Command Trigger Button -->
+      <div class="sidebar-search">
+        <button class="cmd-trigger-btn" id="open-cmd-btn" title="Open Command Menu (⌘K)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.3-4.3"></path>
+          </svg>
+          <span class="cmd-trigger-text">Search tools...</span>
+          <span class="kbd-badge"><kbd>⌘K</kbd></span>
+        </button>
+      </div>
 
-<script src="script.js"></script>
+      <nav class="sidebar-nav" id="nav"></nav>
+
+      <div class="sidebar-footer">
+        <div class="streak-widget">
+          <div class="streak-flame">🔥</div>
+          <div class="streak-details">
+            <span class="streak-label">Study Streak</span>
+            <span class="streak-count"><b id="streak-num">0</b> days</span>
+          </div>
+        </div>
+
+        <button class="theme-toggle-btn" id="theme-toggle" title="Toggle theme">
+          <span id="theme-icon">🌙</span>
+          <span id="theme-label">Dark theme</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ============================== MAIN CONTENT ================================ -->
+    <div class="main-wrapper">
+      <!-- Top Bar for mobile & quick status -->
+      <header class="topbar">
+        <button class="mobile-menu-btn" id="mobile-menu-toggle" aria-label="Open menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" x2="20" y1="12" y2="12"></line>
+            <line x1="4" x2="20" y1="6" y2="6"></line>
+            <line x1="4" x2="20" y1="18" y2="18"></line>
+          </svg>
+        </button>
+
+        <div class="topbar-title" id="topbar-breadcrumb">Dashboard</div>
+
+        <div class="topbar-actions">
+          <div id="ai-status-pill"></div>
+          <button class="topbar-icon-btn" id="topbar-cmd-btn" title="Command Menu (⌘K)">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.3-4.3"></path>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="page-container" id="page"></main>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
